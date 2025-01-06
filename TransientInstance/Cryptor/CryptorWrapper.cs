@@ -14,7 +14,7 @@ namespace TransientInstance.Cryptor
         {
             if (_cryptor == null)
             {
-                _cryptor = new NewCryptor();
+                _cryptor = new NewCryptor("New Certificate");
             }
 
             return _cryptor;

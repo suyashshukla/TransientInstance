@@ -1,6 +1,11 @@
-﻿namespace TransientInstance.Cryptor;
+﻿
+using SimpleInjector;
+
+namespace TransientInstance.Cryptor;
 
 public interface ICryptorService
 {
-    Cryptor GetCryptor(IServiceProvider provider);
+    Cryptor GetCryptor(Container container);
+
+    Cryptor GetCryptor(IServiceProvider serviceProvider);
 }

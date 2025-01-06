@@ -8,5 +8,11 @@ namespace TransientInstance.Cryptor
 {
     public class Cryptor
     {
+        private string certificateName;
+
+        public Cryptor(string certificateName)
+        {
+            certificateName = "DefaultCertificate";
+        }
     }
 }

@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace TransientInstance.Cryptor
 {
-    internal class OldCryptor: Cryptor
+    internal class OldCryptor : Cryptor
     {
+        public OldCryptor(string certificateName) : base(certificateName)
+        {
+        }
     }
 }

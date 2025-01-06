@@ -1,13 +1,17 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using SimpleInjector;
 
 namespace TransientInstance.Cryptor;
 
 public class CryptorService : ICryptorService
 {
-    public Cryptor GetCryptor(IServiceProvider provider)
+    public Cryptor GetCryptor(Container container)
     {
-        var randomNumber = new Random().Next();
+        return container.GetInstance<NewCryptor>();
+    }
 
-        return provider.GetRequiredService<NewCryptor>();
+    public Cryptor GetCryptor(IServiceProvider serviceProvider)
+    {
+        return serviceProvider.GetRequiredService<NewCryptor>();
     }
 }

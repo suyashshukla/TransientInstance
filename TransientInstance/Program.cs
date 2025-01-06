@@ -1,50 +1,29 @@
 ﻿
 using Microsoft.Extensions.DependencyInjection;
 using TransientInstance.Cryptor;
+using System.Collections.Generic;
+using System.Linq;
+using SimpleInjector;
+using SimpleInjector.Lifestyles;
+using System.ComponentModel;
+
+var container = new SimpleInjector.Container();
+container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
+container.Options.EnableAutoVerification = false;
+container.Options.SuppressLifestyleMismatchVerification = true;
+container.Options.ResolveUnregisteredConcreteTypes = true;
 
 var serviceCollection = new ServiceCollection();
-
-
-serviceCollection.AddTransient((provider) => provider.GetRequiredService<ICryptorService>().GetCryptor(provider));
-serviceCollection.AddScoped<ICryptorService, CryptorService>();
-serviceCollection.AddTransient<NewCryptor>();
-serviceCollection.AddTransient<OldCryptor>();
-
+serviceCollection.AddSimpleInjector(container, options =>
+{
+    options.CrossWire<IServiceScopeFactory>();
+    serviceCollection.AddTransient<Cryptor>((provider) => container.GetInstance<ICryptorService>().GetCryptor(container));
+    container.Register<ICryptorService, CryptorService>(Lifestyle.Scoped);
+    serviceCollection.AddSingleton((provider) => new NewCryptor("New Certificate"));
+    serviceCollection.AddSingleton((provider) => new OldCryptor("Old Certificate"));
+});
 var serviceProvider = serviceCollection.BuildServiceProvider();
-
-Console.WriteLine("1. Service Provider with Transient Scope");
-Console.WriteLine();
-GetServiceProviderInstance(serviceProvider);
-Console.WriteLine();
-
-Console.WriteLine("2. Static Instance");
-Console.WriteLine();
-GetStaticInstance(serviceProvider);
-Console.WriteLine();
-
-serviceCollection.AddScoped((provider) => provider.GetRequiredService<ICryptorService>().GetCryptor(provider));
-serviceProvider = serviceCollection.BuildServiceProvider();
-Console.WriteLine("3. Service Provider with Scoped Scope");
-Console.WriteLine();
-GetServiceProviderInstance(serviceProvider);
-Console.WriteLine();
-
-static void GetServiceProviderInstance(IServiceProvider serviceProvider)
-{
-    var oldObject = serviceProvider.GetRequiredService<Cryptor>();
-    var newObject = serviceProvider.GetRequiredService<Cryptor>();
-    Console.WriteLine("----------------------------------------------------------------------------------------------------------------------------");
-    Console.WriteLine("Is same instance?");
-    Console.WriteLine(Object.ReferenceEquals(oldObject, newObject));
-    Console.WriteLine("----------------------------------------------------------------------------------------------------------------------------");
-}
-
-static void GetStaticInstance(IServiceProvider serviceProvider)
-{
-    var oldObject = CryptorWrapper.GetCryptor();
-    var newObject = CryptorWrapper.GetCryptor();
-    Console.WriteLine("----------------------------------------------------------------------------------------------------------------------------");
-    Console.WriteLine("Is same instance?");
-    Console.WriteLine(newObject.Equals(oldObject));
-    Console.WriteLine("----------------------------------------------------------------------------------------------------------------------------");
-}
+serviceProvider.UseSimpleInjector(container);
+using (var scope = AsyncScopedLifestyle.BeginScope(container))
+    SimpleInjectorExecutor.Execute(serviceProvider);
+DefaultExecutor.Execute(container);
